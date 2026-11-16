@@ -2,10 +2,17 @@
 (function() {
   'use strict';
 
-  // Detect if running on Cloud (Vercel) or Local LAN
-  const isLocalHost = window.location.hostname === 'localhost' || 
-                      window.location.hostname === '127.0.0.1' || 
-                      window.location.hostname.startsWith('192.168.');
+  // Detect capability from server
+  let canStreamDirectly = true;
+  fetch('/api/status').then(r => r.json()).then(data => {
+    canStreamDirectly = data.canStream;
+    state.engine = canStreamDirectly ? 'native' : 'youtube';
+  }).catch(() => {
+    canStreamDirectly = window.location.hostname === 'localhost' || 
+                        window.location.hostname === '127.0.0.1' || 
+                        window.location.hostname.startsWith('192.168.');
+    state.engine = canStreamDirectly ? 'native' : 'youtube';
+  });
 
   // State Management
   const state = {
@@ -340,9 +347,8 @@
     videoElement.pause();
     stopTimer();
 
-    // Check if we should attempt Native stream or YouTube Player
-    if (isLocalHost) {
-      // Test native stream endpoint
+    // If server supports direct streaming (Local or Tunnel or with Cookie), use Native Audio for 100% Lock Screen Playback
+    if (canStreamDirectly) {
       try {
         const streamType = state.mode;
         const media = getActiveMedia();

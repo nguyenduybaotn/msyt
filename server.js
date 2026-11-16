@@ -31,6 +31,16 @@ app.use(compression());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Endpoint to check streaming capability
+app.get('/api/status', (req, res) => {
+  const isVercel = Boolean(process.env.VERCEL);
+  const hasCookie = Boolean(process.env.YOUTUBE_COOKIE);
+  res.json({
+    isCloud: isVercel,
+    canStream: !isVercel || hasCookie
+  });
+});
+
 // In-memory cache for video info (TTL: 1 hour)
 const infoCache = new Map();
 
