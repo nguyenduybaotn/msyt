@@ -7,12 +7,21 @@ const yts = require('yt-search');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Lazy dynamic import for ESM @distube/ytdl-core
+// Lazy dynamic import for ESM @distube/ytdl-core with PO Token provider
 let ytdlInstance = null;
 async function getYtdl() {
   if (!ytdlInstance) {
-    const { Ytdl } = await import('@distube/ytdl-core');
-    ytdlInstance = new Ytdl();
+    const { Ytdl, createPoTokenProvider } = await import('@distube/ytdl-core');
+    const options = {};
+    if (process.env.YOUTUBE_COOKIE) {
+      options.cookie = process.env.YOUTUBE_COOKIE;
+    }
+    try {
+      options.getPoToken = await createPoTokenProvider();
+    } catch (err) {
+      console.warn('createPoTokenProvider warning:', err.message);
+    }
+    ytdlInstance = new Ytdl(options);
   }
   return ytdlInstance;
 }
