@@ -367,27 +367,60 @@
       await silentAudio.play();
     } catch (e) {}
 
+    playYouTubeTrack(track.id);
+  }
+
+  function playYouTubeTrack(videoId) {
     if (ytReady && ytPlayer && typeof ytPlayer.loadVideoById === 'function') {
-      ytPlayer.loadVideoById(track.id);
-      state.isPlaying = true;
-      updatePlayPauseUI(true);
-    } else {
-      console.log('YouTube Player waiting for ready event...');
+      try {
+        ytPlayer.loadVideoById({
+          videoId: videoId,
+          startSeconds: 0
+        });
+        ytPlayer.playVideo();
+        state.isPlaying = true;
+        updatePlayPauseUI(true);
+        startTimer();
+        return;
+      } catch (err) {
+        console.warn('ytPlayer.loadVideoById error, falling back to direct iframe:', err);
+      }
     }
+
+    // Direct IFrame Fallback if YouTube API script is still loading
+    ytPlayerContainer.innerHTML = `
+      <iframe 
+        id="ytIframeDirect" 
+        src="https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&playsinline=1&enablejsapi=1" 
+        style="width: 100%; height: 100%; border: none;" 
+        allow="autoplay; encrypted-media; picture-in-picture" 
+        allowfullscreen>
+      </iframe>
+    `;
+    state.isPlaying = true;
+    updatePlayPauseUI(true);
+    startTimer();
   }
 
   function updateViewVisibility() {
     if (state.engine === 'youtube') {
       videoContainer.style.display = 'none';
       if (state.mode === 'video') {
-        ytPlayerContainer.style.display = 'block';
+        ytPlayerContainer.style.opacity = '1';
+        ytPlayerContainer.style.pointerEvents = 'auto';
+        ytPlayerContainer.style.zIndex = '10';
         audioVisualizer.style.display = 'none';
       } else {
-        ytPlayerContainer.style.display = 'none';
+        // Audio Mode: Keep iframe active in DOM with tiny opacity so iOS Safari doesn't suspend audio
+        ytPlayerContainer.style.opacity = '0.01';
+        ytPlayerContainer.style.pointerEvents = 'none';
+        ytPlayerContainer.style.zIndex = '1';
         audioVisualizer.style.display = 'flex';
       }
     } else {
-      ytPlayerContainer.style.display = 'none';
+      ytPlayerContainer.style.opacity = '0';
+      ytPlayerContainer.style.pointerEvents = 'none';
+      ytPlayerContainer.style.zIndex = '0';
       if (state.mode === 'video') {
         videoContainer.style.display = 'block';
         audioVisualizer.style.display = 'none';

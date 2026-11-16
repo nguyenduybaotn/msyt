@@ -18,7 +18,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/style.css?v=3.0">
 </head>
 <body>
   <!-- Safe Area Wrapper -->
@@ -210,7 +210,7 @@
         </div>
 
         <!-- Embedded YouTube Player (Universal Fallback for Vercel/Cloud) -->
-        <div id="ytPlayerContainer" style="display: none; width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 5;">
+        <div id="ytPlayerContainer" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 1; opacity: 0.01; pointer-events: none; transition: opacity 0.25s ease;">
           <div id="ytPlayer" style="width: 100%; height: 100%;"></div>
         </div>
       </div>
@@ -300,7 +300,15 @@
 
   </div>
 
+  <script>
+    // Force clear old cache on load
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function(regs) {
+        for (let reg of regs) reg.update();
+      });
+    }
+  </script>
   <script src="https://www.youtube.com/iframe_api"></script>
-  <script src="/app.js"></script>
+  <script src="/app.js?v=3.0"></script>
 </body>
 </html>
