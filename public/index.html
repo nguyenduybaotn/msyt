@@ -208,10 +208,16 @@
             <i class="fa-solid fa-arrow-up-right-from-square"></i> Cửa sổ nổi PiP
           </button>
         </div>
+
+        <!-- Embedded YouTube Player (Universal Fallback for Vercel/Cloud) -->
+        <div id="ytPlayerContainer" style="display: none; width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 5;">
+          <div id="ytPlayer" style="width: 100%; height: 100%;"></div>
+        </div>
       </div>
 
-      <!-- Hidden Audio Element for High Quality Background Audio Streaming -->
+      <!-- Hidden Audio Elements -->
       <audio id="audioElement" preload="auto"></audio>
+      <audio id="silentAudio" loop preload="auto"></audio>
 
       <!-- Track Information -->
       <div class="track-meta">
@@ -294,6 +300,7 @@
 
   </div>
 
+  <script src="https://www.youtube.com/iframe_api"></script>
   <script src="/app.js"></script>
 </body>
 </html>
