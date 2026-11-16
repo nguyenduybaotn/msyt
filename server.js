@@ -3,11 +3,19 @@ const cors = require('cors');
 const compression = require('compression');
 const path = require('path');
 const yts = require('yt-search');
-const { Ytdl } = require('@distube/ytdl-core');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const ytdl = new Ytdl();
+
+// Lazy dynamic import for ESM @distube/ytdl-core
+let ytdlInstance = null;
+async function getYtdl() {
+  if (!ytdlInstance) {
+    const { Ytdl } = await import('@distube/ytdl-core');
+    ytdlInstance = new Ytdl();
+  }
+  return ytdlInstance;
+}
 
 app.use(cors());
 app.use(compression());
@@ -22,6 +30,7 @@ async function getVideoInfo(videoId) {
   if (cached && (Date.now() - cached.timestamp < 3600000)) {
     return cached.data;
   }
+  const ytdl = await getYtdl();
   const info = await ytdl.getInfo(videoId);
   infoCache.set(videoId, { data: info, timestamp: Date.now() });
   return info;
@@ -153,6 +162,7 @@ app.get('/api/stream', async (req, res) => {
     if (!videoId) return res.status(400).send('Missing video ID');
 
     const info = await getVideoInfo(videoId);
+    const ytdl = await getYtdl();
     let selectedFormat = null;
 
     if (type === 'video') {
