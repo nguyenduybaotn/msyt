@@ -250,10 +250,14 @@ app.use((req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`=========================================`);
-  console.log(` YouTube iOS Background Player Web App  `);
-  console.log(` Running at http://localhost:${PORT}     `);
-  console.log(` On LAN: Open with iPhone at your local IP`);
-  console.log(`=========================================`);
-});
+if (require.main === module) {
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`=========================================`);
+    console.log(` YouTube iOS Background Player Web App  `);
+    console.log(` Running at http://localhost:${PORT}     `);
+    console.log(` On LAN: Open with iPhone at your local IP`);
+    console.log(`=========================================`);
+  });
+}
+
+module.exports = app;
