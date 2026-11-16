@@ -1,0 +1,21 @@
+{
+  "name": "YouPlay - YouTube iOS Background Player",
+  "short_name": "YouPlay",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0b10",
+  "theme_color": "#0a0b10",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "https://img.icons8.com/color/192/youtube-play.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://img.icons8.com/color/512/youtube-play.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>YouPlay - Nghe YouTube Chạy Nền trên iPhone</title>
+  
+  <!-- iOS Meta Tags for PWA & Background Audio -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="YouPlay">
+  <meta name="theme-color" content="#0a0a0f">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="https://img.icons8.com/color/192/youtube-play.png">
+  
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <!-- Safe Area Wrapper -->
+  <div id="app" class="app-container">
+    
+    <!-- Top Header -->
+    <header class="app-header">
+      <div class="brand">
+        <div class="logo-icon">
+          <i class="fa-solid fa-play"></i>
+        </div>
+        <div class="logo-text">
+          <span class="logo-title">YouPlay</span>
+          <span class="logo-badge">iOS Background</span>
+        </div>
+      </div>
+      <button id="btnHelp" class="icon-btn" title="Hướng dẫn dùng trên iPhone">
+        <i class="fa-solid fa-circle-question"></i>
+      </button>
+    </header>
+
+    <!-- Search Section -->
+    <section class="search-section">
+      <form id="searchForm" class="search-bar" onsubmit="return false;">
+        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+        <input 
+          type="search" 
+          id="searchInput" 
+          placeholder="Tìm bài hát, nghệ sĩ hoặc dán link YouTube..." 
+          autocomplete="off"
+          autocorrect="off"
+          spellcheck="false"
+        >
+        <button type="button" id="clearSearch" class="clear-btn" style="display: none;">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+        <button type="submit" id="submitSearch" class="search-submit-btn">
+          <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </form>
+      <!-- Suggestions dropdown -->
+      <div id="suggestionsBox" class="suggestions-dropdown" style="display: none;"></div>
+    </section>
+
+    <!-- Quick Quick Nav Tabs -->
+    <nav class="nav-tabs">
+      <button class="tab-btn active" data-tab="explore">
+        <i class="fa-solid fa-compass"></i> Khám phá
+      </button>
+      <button class="tab-btn" data-tab="queue">
+        <i class="fa-solid fa-list-ul"></i> Hàng đợi (<span id="queueCount">0</span>)
+      </button>
+      <button class="tab-btn" data-tab="favorites">
+        <i class="fa-solid fa-heart"></i> Yêu thích
+      </button>
+      <button class="tab-btn" data-tab="history">
+        <i class="fa-solid fa-clock-rotate-left"></i> Lịch sử
+      </button>
+    </nav>
+
+    <!-- Main Dynamic Content Views -->
+    <main class="main-content">
+      <!-- Loading Spinner -->
+      <div id="loader" class="loader-container" style="display: none;">
+        <div class="spinner"></div>
+        <p id="loaderText">Đang tải dữ liệu từ YouTube...</p>
+      </div>
+
+      <!-- Tab: Explore -->
+      <div id="tabExplore" class="tab-view active">
+        <!-- Banner iOS Guide Tip -->
+        <div class="ios-tip-banner">
+          <div class="tip-icon"><i class="fa-brands fa-apple"></i></div>
+          <div class="tip-content">
+            <strong>Mẹo nghe trên iPhone:</strong> Khi phát nhạc, bạn có thể <b>tắt màn hình</b> hoặc <b>chuyển ứng dụng</b>, nhạc vẫn tiếp tục chạy trên Màn hình khóa và Dynamic Island!
+          </div>
+        </div>
+
+        <div class="section-title-wrap">
+          <h2 id="resultsHeading" class="section-title">Gợi ý thịnh hành</h2>
+        </div>
+        <div id="videoGrid" class="video-grid"></div>
+      </div>
+
+      <!-- Tab: Queue -->
+      <div id="tabQueue" class="tab-view">
+        <div class="section-header-row">
+          <h2 class="section-title">Danh sách chờ phát</h2>
+          <button id="btnClearQueue" class="text-btn">Xóa hàng đợi</button>
+        </div>
+        <div id="queueList" class="video-list"></div>
+      </div>
+
+      <!-- Tab: Favorites -->
+      <div id="tabFavorites" class="tab-view">
+        <div class="section-header-row">
+          <h2 class="section-title">Bài hát đã lưu</h2>
+          <button id="btnClearFavorites" class="text-btn">Xóa tất cả</button>
+        </div>
+        <div id="favoritesList" class="video-list"></div>
+      </div>
+
+      <!-- Tab: History -->
+      <div id="tabHistory" class="tab-view">
+        <div class="section-header-row">
+          <h2 class="section-title">Đã nghe gần đây</h2>
+          <button id="btnClearHistory" class="text-btn">Xóa lịch sử</button>
+        </div>
+        <div id="historyList" class="video-list"></div>
+      </div>
+    </main>
+
+    <!-- Mini Player (Docked at Bottom) -->
+    <div id="miniPlayer" class="mini-player" style="display: none;">
+      <div class="mini-progress-bar">
+        <div id="miniProgressFill" class="mini-progress-fill"></div>
+      </div>
+      <div class="mini-player-content" id="miniPlayerClick">
+        <img id="miniThumbnail" src="" alt="Thumbnail" class="mini-thumb">
+        <div class="mini-info">
+          <div id="miniTitle" class="mini-title">Chưa chọn bài</div>
+          <div id="miniAuthor" class="mini-author">YouTube</div>
+        </div>
+      </div>
+      <div class="mini-controls">
+        <button id="miniPrevBtn" class="mini-btn" title="Bài trước">
+          <i class="fa-solid fa-backward-step"></i>
+        </button>
+        <button id="miniPlayBtn" class="mini-btn play-circle" title="Phát/Tạm dừng">
+          <i class="fa-solid fa-play"></i>
+        </button>
+        <button id="miniNextBtn" class="mini-btn" title="Bài kế tiếp">
+          <i class="fa-solid fa-forward-step"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Fullscreen Player Modal / Slide-up Sheet -->
+    <div id="fullPlayer" class="full-player-sheet">
+      <div class="sheet-handle" id="sheetCloseBar">
+        <div class="handle-bar"></div>
+      </div>
+
+      <div class="player-top-bar">
+        <button id="btnMinimizePlayer" class="icon-btn-round">
+          <i class="fa-solid fa-chevron-down"></i>
+        </button>
+        <div class="player-mode-switch">
+          <button id="modeAudio" class="mode-btn active">
+            <i class="fa-solid fa-headphones"></i> Audio Nền
+          </button>
+          <button id="modeVideo" class="mode-btn">
+            <i class="fa-solid fa-video"></i> Video / PiP
+          </button>
+        </div>
+        <button id="btnFavCurrent" class="icon-btn-round" title="Thêm vào yêu thích">
+          <i class="fa-regular fa-heart"></i>
+        </button>
+      </div>
+
+      <!-- Player Viewport: Audio Cover VS Video Element -->
+      <div class="player-visual-container">
+        <!-- Audio Mode Visualizer -->
+        <div id="audioVisualizer" class="audio-view">
+          <div class="album-art-wrap">
+            <img id="playerCover" src="" alt="Album Artwork" class="album-art">
+            <div id="audioWave" class="wave-bars">
+              <span></span><span></span><span></span><span></span><span></span>
+            </div>
+          </div>
+          <div class="bg-playback-hint">
+            <i class="fa-solid fa-lock"></i> Sẵn sàng phát khi khóa màn hình iOS
+          </div>
+        </div>
+
+        <!-- Video Mode Element (With PiP) -->
+        <div id="videoContainer" class="video-view" style="display: none;">
+          <video 
+            id="videoElement" 
+            playsinline 
+            webkit-playsinline
+            x5-playsinline
+            controlslist="nodownload"
+            preload="metadata"
+          ></video>
+          <button id="btnTogglePip" class="pip-overlay-btn" title="Bật Picture-in-Picture">
+            <i class="fa-solid fa-arrow-up-right-from-square"></i> Cửa sổ nổi PiP
+          </button>
+        </div>
+      </div>
+
+      <!-- Hidden Audio Element for High Quality Background Audio Streaming -->
+      <audio id="audioElement" preload="auto"></audio>
+
+      <!-- Track Information -->
+      <div class="track-meta">
+        <h1 id="playerTitle" class="track-title">Tên video đang tải...</h1>
+        <p id="playerAuthor" class="track-author">Kênh YouTube</p>
+      </div>
+
+      <!-- Seekbar & Timestamps -->
+      <div class="player-progress-area">
+        <div class="progress-bar-container" id="progressBarContainer">
+          <div id="progressFill" class="progress-fill"></div>
+          <div id="progressThumb" class="progress-thumb"></div>
+        </div>
+        <div class="time-row">
+          <span id="currentTime">00:00</span>
+          <span id="totalDuration">00:00</span>
+        </div>
+      </div>
+
+      <!-- Main Controls Row -->
+      <div class="main-controls-row">
+        <button id="btnShuffle" class="control-btn toggle-btn" title="Phát ngẫu nhiên">
+          <i class="fa-solid fa-shuffle"></i>
+        </button>
+        <button id="btnPrev" class="control-btn" title="Bài trước">
+          <i class="fa-solid fa-backward-step"></i>
+        </button>
+        <button id="btnPlayPause" class="control-btn play-giant" title="Phát / Tạm dừng">
+          <i class="fa-solid fa-play"></i>
+        </button>
+        <button id="btnNext" class="control-btn" title="Bài tiếp">
+          <i class="fa-solid fa-forward-step"></i>
+        </button>
+        <button id="btnRepeat" class="control-btn toggle-btn" title="Lặp lại">
+          <i class="fa-solid fa-repeat"></i>
+        </button>
+      </div>
+
+      <!-- Secondary Extra Controls -->
+      <div class="extra-controls-row">
+        <button id="btnPlaybackRate" class="pill-btn">1.0x</button>
+        <button id="btnQuickPip" class="pill-btn"><i class="fa-solid fa-clone"></i> PiP</button>
+        <button id="btnShare" class="pill-btn"><i class="fa-solid fa-arrow-up-from-bracket"></i> Chia sẻ</button>
+      </div>
+    </div>
+
+    <!-- iOS Installation & Usage Modal -->
+    <div id="helpModal" class="modal-backdrop" style="display: none;">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3><i class="fa-brands fa-apple"></i> Hướng dẫn iPhone</h3>
+          <button id="btnCloseHelp" class="modal-close"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+          <div class="help-step">
+            <div class="step-num">1</div>
+            <div class="step-desc">
+              <strong>Thêm ra Màn hình chính (PWA):</strong>
+              <p>Mở Safari trên iPhone, bấm nút <b>Chia sẻ</b> (<i class="fa-solid fa-arrow-up-from-bracket"></i>), cuộn xuống chọn <b>"Thêm vào MH chính" (Add to Home Screen)</b> để dùng app toàn màn hình.</p>
+            </div>
+          </div>
+          <div class="help-step">
+            <div class="step-num">2</div>
+            <div class="step-desc">
+              <strong>Nghe nhạc khi tắt màn hình:</strong>
+              <p>Chọn chế độ <b>"Audio Nền"</b>. Bấm phát một bài hát, sau đó bạn có thể khóa màn hình hoặc chuyển sang app khác. Nhạc sẽ tiếp tục phát từ Dynamic Island và Màn hình khóa.</p>
+            </div>
+          </div>
+          <div class="help-step">
+            <div class="step-num">3</div>
+            <div class="step-desc">
+              <strong>Xem video cửa sổ nổi (PiP):</strong>
+              <p>Chuyển sang tab <b>"Video / PiP"</b>, bấm nút <b>"Cửa sổ nổi PiP"</b>. Video sẽ thu nhỏ vào góc màn hình cho phép bạn vừa xem vừa làm việc khác.</p>
+            </div>
+          </div>
+        </div>
+        <button id="btnUnderstand" class="primary-modal-btn">Đã hiểu</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
